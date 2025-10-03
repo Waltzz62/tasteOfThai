@@ -13,66 +13,202 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================
+// USER & STAFF
+// ============================================
+
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String
-  phone     String?
-  password  String
-  role      Role     @default(USER)
-  bookings  Booking[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String         @id @default(uuid())
+  email         String         @unique
+  name          String
+  phone         String?
+  password      String
+  role          Role           @default(USER)
+  image         String?
+  
+  bookings      Booking[]
+  staffApplication StaffApplication?
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  @@index([email])
 }
 
+model Staff {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  name          String
+  phone         String
+  password      String
+  image         String?
+  bio           String?
+  specialties   String[]
+  active        Boolean        @default(true)
+  
+  schedules     Schedule[]
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  @@index([email])
+  @@index([active])
+}
+
+model StaffApplication {
+  id            String         @id @default(uuid())
+  userId        String         @unique
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  fullName      String
+  phone         String
+  email         String
+  experience    String
+  skills        String[]
+  
+  status        ApplicationStatus @default(PENDING)
+  reviewNote    String?
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  @@index([status])
+}
+
+// ============================================
+// CLASSES & SCHEDULES
+// ============================================
+
 model Class {
-  id          String   @id @default(uuid())
-  title       String
-  description String
-  duration    Int      // นาที
-  price       Float
-  maxStudents Int
-  image       String?
-  active      Boolean  @default(true)
-  schedules   Schedule[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String         @id @default(uuid())
+  title         String
+  description   String
+  duration      Int
+  price         Float
+  maxStudents   Int
+  image         String?
+  difficulty    DifficultyLevel @default(BEGINNER)
+  active        Boolean        @default(true)
+  
+  schedules     Schedule[]
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  @@index([active])
 }
 
 model Schedule {
-  id          String   @id @default(uuid())
-  classId     String
-  class       Class    @relation(fields: [classId], references: [id])
-  startTime   DateTime
-  endTime     DateTime
-  availableSlots Int
-  bookings    Booking[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String        @id @default(uuid())
+  classId        String
+  class          Class         @relation(fields: [classId], references: [id], onDelete: Cascade)
+  
+  staffId        String?
+  staff          Staff?        @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  
+  startTime      DateTime
+  endTime        DateTime
+  maxStudents    Int
+  bookedCount    Int           @default(0)
+  
+  status         ScheduleStatus @default(SCHEDULED)
+  
+  bookings       Booking[]
+  
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  
+  @@index([startTime])
+  @@index([status])
+  @@index([staffId])
 }
 
+// ============================================
+// BOOKINGS & PAYMENTS
+// ============================================
+
 model Booking {
-  id         String   @id @default(uuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  scheduleId String
-  schedule   Schedule @relation(fields: [scheduleId], references: [id])
-  status     BookingStatus @default(PENDING)
-  paymentId  String?
-  totalPrice Float
-  notes      String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id            String         @id @default(uuid())
+  bookingNumber String         @unique @default(cuid())
+  
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  scheduleId    String
+  schedule      Schedule       @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  
+  numberOfPeople Int           @default(1)
+  totalPrice    Float
+  
+  status        BookingStatus  @default(PENDING)
+  notes         String?
+  
+  payment       Payment?
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  @@index([userId])
+  @@index([scheduleId])
+  @@index([status])
 }
+
+model Payment {
+  id                String        @id @default(uuid())
+  bookingId         String        @unique
+  booking           Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  amount            Float
+  status            PaymentStatus @default(PENDING)
+  paymentMethod     String?
+  
+  paidAt            DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  @@index([status])
+}
+
+// ============================================
+// ENUMS
+// ============================================
 
 enum Role {
   USER
+  STAFF
   ADMIN
+  DEV
 }
 
 enum BookingStatus {
   PENDING
   CONFIRMED
-  CANCELLED
   COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum ScheduleStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum DifficultyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

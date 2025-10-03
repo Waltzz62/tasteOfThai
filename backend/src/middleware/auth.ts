@@ -1,30 +1,31 @@
-import { type Request, type Response, type NextFunction } from 'express';
-import jwt , {type JwtPayload }from 'jsonwebtoken';
+import type { Response, NextFunction } from 'express';
+import type { AuthRequest } from '../types/type.js';
+import { verifyToken } from '../utils/jwt.js';
+import { Role } from '@prisma/client';
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: string | JwtPayload;
-    }
-  }
-}
-
-export const authenticateToken = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const token = req.headers['authorization']?.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: 'Access denied' });
-  }
-
+export const authenticate = (req: AuthRequest, res: Response, next: NextFunction): void => {
   try {
-    const verified = jwt.verify(token, process.env.JWT_SECRET!);
-    req.user = verified;
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) {
+      res.status(401).json({ success: false, message: 'No token provided' });
+      return;
+    }
+
+    const decoded = verifyToken(token);
+    req.user = decoded;
     next();
   } catch (error) {
-    res.status(403).json({ error: 'Invalid token' });
+    res.status(401).json({ success: false, message: 'Invalid token' });
   }
+};
+
+export const authorize = (...roles: Role[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction): void => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      res.status(403).json({ success: false, message: 'Insufficient permissions' });
+      return;
+    }
+    next();
+  };
 };
