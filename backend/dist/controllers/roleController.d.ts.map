@@ -1,0 +1,1 @@
+{"version":3,"file":"roleController.d.ts","sourceRoot":"","sources":["../../src/controllers/roleController.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,QAAQ,EAAE,MAAM,SAAS,CAAC;AACxC,OAAO,KAAK,EAAE,WAAW,EAAE,MAAM,kBAAkB,CAAC;AAIpD,eAAO,MAAM,cAAc;oBACH,WAAW,OAAO,QAAQ,GAAG,OAAO,CAAC,IAAI,CAAC;qBAwBzC,WAAW,OAAO,QAAQ,GAAG,OAAO,CAAC,IAAI,CAAC;CAWlE,CAAC"}

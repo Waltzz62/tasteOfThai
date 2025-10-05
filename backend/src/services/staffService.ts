@@ -1,6 +1,10 @@
-import type { CreateStaffDto, UpdateStaffDto, StaffWithoutPassword } from '../types/type.js';
-import { prisma } from '../config/db.js';
-import { hashPassword } from '../utils/hash.js';
+import type {
+  CreateStaffDto,
+  UpdateStaffDto,
+  StaffWithoutPassword,
+} from "../types/type.js";
+import { prisma } from "../config/db.js";
+import { hashPassword } from "../utils/hash.js";
 
 export const staffService = {
   async getAll(): Promise<StaffWithoutPassword[]> {
@@ -38,7 +42,7 @@ export const staffService = {
     });
 
     if (!staff) {
-      throw new Error('Staff not found');
+      throw new Error("Staff not found");
     }
 
     return staff;
@@ -50,7 +54,7 @@ export const staffService = {
     });
 
     if (existingStaff) {
-      throw new Error('Email already exists');
+      throw new Error("Email already exists");
     }
 
     const hashedPassword = await hashPassword(data.password);
@@ -77,17 +81,13 @@ export const staffService = {
     return staff;
   },
 
-  async update(id: string, data: UpdateStaffDto): Promise<StaffWithoutPassword> {
-    const updateData: any = { ...data };
-    
-    // Hash password if provided
-    if (data.password) {
-      updateData.password = await hashPassword(data.password);
-    }
-    
+  async update(
+    id: string,
+    data: UpdateStaffDto
+  ): Promise<StaffWithoutPassword> {
     const staff = await prisma.staff.update({
       where: { id },
-      data: updateData,
+      data,
       select: {
         id: true,
         email: true,
@@ -114,13 +114,13 @@ export const staffService = {
       });
 
       if (!staff) {
-        throw new Error('Staff not found');
+        throw new Error("Staff not found");
       }
 
       // Find corresponding user and change role back to USER
       await tx.user.updateMany({
         where: { email: staff.email },
-        data: { role: 'USER' },
+        data: { role: "USER" },
       });
 
       // Delete staff record completely

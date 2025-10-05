@@ -1,25 +1,35 @@
-import type { CreateClassDto, UpdateClassDto, ClassFilters, PaginatedResponse, ClassWithSchedules } from '../types/type.js';
-import type { Class, Prisma } from '@prisma/client';
-import { prisma } from '../config/db.js';
+import type {
+  CreateClassDto,
+  UpdateClassDto,
+  ClassFilters,
+  PaginatedResponse,
+  ClassWithSchedules,
+} from "../types/type.js";
+import type { Class, Prisma } from "@prisma/client";
+import { prisma } from "../config/db.js";
 
 export const classService = {
-  async getAll(filters?: ClassFilters): Promise<PaginatedResponse<ClassWithSchedules>> {
-    const { 
-      page = 1, 
-      limit = 10, 
-      difficulty, 
-      minPrice, 
-      maxPrice, 
-      active = true 
+  async getAll(
+    filters?: ClassFilters
+  ): Promise<PaginatedResponse<ClassWithSchedules>> {
+    const {
+      page = 1,
+      limit = 10,
+      difficulty,
+      minPrice,
+      maxPrice,
+      active = true,
     } = filters || {};
-    
+
     const where: Prisma.ClassWhereInput = { active };
-    
-    if (difficulty && difficulty !== '') where.difficulty = difficulty;
-    
-    const minPriceNum = minPrice && minPrice !== '' ? parseFloat(minPrice as string) : undefined;
-    const maxPriceNum = maxPrice && maxPrice !== '' ? parseFloat(maxPrice as string) : undefined;
-    
+
+    if (difficulty) where.difficulty = difficulty;
+
+    const minPriceNum = minPrice
+      ? parseFloat(minPrice as unknown as string)
+      : undefined;
+    const maxPriceNum = maxPrice;
+
     if (minPriceNum !== undefined || maxPriceNum !== undefined) {
       where.price = {};
       if (minPriceNum !== undefined) where.price.gte = minPriceNum;
@@ -38,9 +48,9 @@ export const classService = {
           schedules: {
             where: {
               startTime: { gte: new Date() },
-              status: 'SCHEDULED',
+              status: "SCHEDULED",
             },
-            orderBy: { startTime: 'asc' },
+            orderBy: { startTime: "asc" },
             take: 5,
           },
         },
@@ -65,13 +75,13 @@ export const classService = {
         schedules: {
           where: { startTime: { gte: new Date() } },
           include: { staff: true },
-          orderBy: { startTime: 'asc' },
+          orderBy: { startTime: "asc" },
         },
       },
     });
 
     if (!classData) {
-      throw new Error('Class not found');
+      throw new Error("Class not found");
     }
 
     return classData;

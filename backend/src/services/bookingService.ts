@@ -22,6 +22,7 @@ export const bookingService = {
           include: {
             class: true,
             staff: true,
+            bookings: true,
           },
         },
         payment: true,

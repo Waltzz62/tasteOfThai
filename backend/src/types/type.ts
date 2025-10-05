@@ -140,6 +140,7 @@ export interface UpdateStaffDto {
   specialties?: string[];
   image?: string;
   active?: boolean;
+  password?: string;
 }
 
 // ============================================

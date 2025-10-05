@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # PostgreSQL Database
@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: taste_of_thai
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: p@ssw0rd
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -24,8 +24,8 @@ services:
       dockerfile: Dockerfile
     container_name: taste-thai-backend
     environment:
-      DATABASE_URL: postgresql://postgres:${DB_PASSWORD}@database:5432/taste_of_thai?schema=public
-      JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: postgresql://postgres:p@ssw0rd@localhost:5432/taste_of_thai?schema=public
+      JWT_SECRET: d73a7222ab2828fd35fb00a7997bfdf57bf7f416be50c6655f1f710e6fe43d6a
       PORT: 3000
       NODE_ENV: production
       FRONTEND_URL: http://localhost

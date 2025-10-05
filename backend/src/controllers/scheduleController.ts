@@ -22,7 +22,8 @@ export const scheduleController = {
       });
 
       if (!staff) {
-        return res.status(404).json({ success: false, message: 'Staff record not found' });
+        res.status(404).json({ success: false, message: 'Staff record not found' });
+        return;
       }
 
       const result = await scheduleService.getByStaff(staff.id);
