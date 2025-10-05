@@ -29,6 +29,9 @@ jobs:
       - name: go to pwd
         run: pwd
 
+      - name: view ls
+        run: ls
+
       - name: npm install, build, and test
         run: |
           npm install
