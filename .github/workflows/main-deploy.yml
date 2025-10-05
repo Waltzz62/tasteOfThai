@@ -26,6 +26,9 @@ jobs:
       - name: go to fronetend directory
         run: cd frontend
 
+      - name: go to pwd
+        run: pwd
+
       - name: npm install, build, and test
         run: |
           npm install
