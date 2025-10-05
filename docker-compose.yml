@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  database:
+    image: postgres:15-alpine
+    container_name: taste-thai-db
+    environment:
+      POSTGRES_DB: taste_of_thai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - taste-thai-network
+    restart: unless-stopped
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: taste-thai-backend
+    environment:
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD}@database:5432/taste_of_thai?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 3000
+      NODE_ENV: production
+      FRONTEND_URL: http://localhost
+    ports:
+      - "3000:3000"
+    depends_on:
+      - database
+    networks:
+      - taste-thai-network
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: taste-thai-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - taste-thai-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  taste-thai-network:
+    driver: bridge

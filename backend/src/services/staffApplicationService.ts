@@ -88,23 +88,66 @@ export const staffApplicationService = {
       updateData.reviewedAt = new Date();
     }
 
-    const application = await prisma.staffApplication.update({
-      where: { id },
-      data: updateData,
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            phone: true,
-            role: true,
-            image: true,
-            createdAt: true,
-            updatedAt: true,
+    const application = await prisma.$transaction(async (tx) => {
+      const updatedApplication = await tx.staffApplication.update({
+        where: { id },
+        data: updateData,
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              phone: true,
+              role: true,
+              image: true,
+              password: true,
+              createdAt: true,
+              updatedAt: true,
+            },
           },
         },
-      },
+      });
+
+      // If approved, create staff account and update user role
+      if (data.status === 'APPROVED') {
+        try {
+          // Check if staff already exists
+          const existingStaff = await tx.staff.findUnique({
+            where: { email: updatedApplication.email },
+          });
+
+          if (!existingStaff) {
+            // Create staff record
+            await tx.staff.create({
+              data: {
+                email: updatedApplication.email,
+                name: updatedApplication.fullName,
+                phone: updatedApplication.phone,
+                password: updatedApplication.user.password, // Password is already hashed
+                specialties: updatedApplication.skills,
+                bio: updatedApplication.experience,
+              },
+            });
+            console.log('Staff record created');
+          } else {
+            console.log('Staff record already exists');
+          }
+
+          // Update user role to STAFF
+          await tx.user.update({
+            where: { id: updatedApplication.userId },
+            data: { role: 'STAFF' },
+          });
+          
+          console.log('User role updated to STAFF successfully');
+        } catch (error) {
+          console.error('Error in approval process:', error);
+          throw error;
+        }
+      }
+
+      return updatedApplication;
     });
 
     return application;

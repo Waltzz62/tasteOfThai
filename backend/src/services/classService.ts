@@ -15,11 +15,15 @@ export const classService = {
     
     const where: Prisma.ClassWhereInput = { active };
     
-    if (difficulty) where.difficulty = difficulty;
-    if (minPrice !== undefined || maxPrice !== undefined) {
+    if (difficulty && difficulty !== '') where.difficulty = difficulty;
+    
+    const minPriceNum = minPrice && minPrice !== '' ? parseFloat(minPrice as string) : undefined;
+    const maxPriceNum = maxPrice && maxPrice !== '' ? parseFloat(maxPrice as string) : undefined;
+    
+    if (minPriceNum !== undefined || maxPriceNum !== undefined) {
       where.price = {};
-      if (minPrice !== undefined) where.price.gte = minPrice;
-      if (maxPrice !== undefined) where.price.lte = maxPrice;
+      if (minPriceNum !== undefined) where.price.gte = minPriceNum;
+      if (maxPriceNum !== undefined) where.price.lte = maxPriceNum;
     }
 
     const skip = (page - 1) * limit;

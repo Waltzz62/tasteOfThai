@@ -65,29 +65,32 @@ export const authService = {
 
   // Staff Login
   async staffLogin(credentials: LoginCredentials): Promise<AuthResponse> {
-    const staff = await prisma.staff.findUnique({
-      where: { email: credentials.email },
+    const user = await prisma.user.findUnique({
+      where: { 
+        email: credentials.email,
+        role: 'STAFF'
+      },
     });
 
-    if (!staff) {
-      throw new Error('Invalid credentials');
+    if (!user) {
+      throw new Error('Invalid credentials or not a staff member');
     }
 
-    const isValid = await comparePassword(credentials.password, staff.password);
+    const isValid = await comparePassword(credentials.password, user.password);
     
     if (!isValid) {
       throw new Error('Invalid credentials');
     }
 
-    const token = generateToken({ id: staff.id, email: staff.email, role: 'STAFF' });
+    const token = generateToken({ id: user.id, email: user.email, role: user.role });
     
     return {
       token,
       user: {
-        id: staff.id,
-        email: staff.email,
-        name: staff.name,
-        role: 'STAFF',
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
       },
     };
   },

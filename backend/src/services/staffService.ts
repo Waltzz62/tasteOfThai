@@ -78,9 +78,16 @@ export const staffService = {
   },
 
   async update(id: string, data: UpdateStaffDto): Promise<StaffWithoutPassword> {
+    const updateData: any = { ...data };
+    
+    // Hash password if provided
+    if (data.password) {
+      updateData.password = await hashPassword(data.password);
+    }
+    
     const staff = await prisma.staff.update({
       where: { id },
-      data,
+      data: updateData,
       select: {
         id: true,
         email: true,
@@ -99,9 +106,27 @@ export const staffService = {
   },
 
   async delete(id: string): Promise<void> {
-    await prisma.staff.update({
-      where: { id },
-      data: { active: false },
+    await prisma.$transaction(async (tx) => {
+      // Get staff info
+      const staff = await tx.staff.findUnique({
+        where: { id },
+        select: { email: true },
+      });
+
+      if (!staff) {
+        throw new Error('Staff not found');
+      }
+
+      // Find corresponding user and change role back to USER
+      await tx.user.updateMany({
+        where: { email: staff.email },
+        data: { role: 'USER' },
+      });
+
+      // Delete staff record completely
+      await tx.staff.delete({
+        where: { id },
+      });
     });
   },
 };
